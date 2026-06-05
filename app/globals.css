@@ -40,9 +40,3 @@ h1, h2, h3, h4, h5, h6 {
 .hero-search::placeholder {
   color: rgba(255, 255, 255, 0.45);
 }
-
-/* Carrot cursor — customer portal only */
-.carrot-cursor,
-.carrot-cursor * {
-  cursor: url('/images/carrot_cursor.png') 4 4, auto !important;
-}
