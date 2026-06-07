@@ -14,12 +14,15 @@ type CartContextType = {
   removeItem: (productId: string) => void;
   clearCart: () => void;
   totalItems: number;
+  itemNotes: Record<string, string>;
+  setItemNote: (productId: string, note: string) => void;
 };
 
 const CartContext = createContext<CartContextType | null>(null);
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
+  const [itemNotes, setItemNotes] = useState<Record<string, string>>({});
 
   const addItem = useCallback((product: Product, quantity: number) => {
     setItems((prev) => {
@@ -43,12 +46,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setItems((prev) => prev.filter((i) => i.product.id !== productId));
   }, []);
 
-  const clearCart = useCallback(() => setItems([]), []);
+  const clearCart = useCallback(() => { setItems([]); setItemNotes({}); }, []);
+
+  const setItemNote = useCallback((productId: string, note: string) => {
+    setItemNotes((prev) => ({ ...prev, [productId]: note }));
+  }, []);
 
   const totalItems = items.reduce((sum, i) => sum + i.quantity, 0);
 
   return (
-    <CartContext.Provider value={{ items, addItem, updateQty, removeItem, clearCart, totalItems }}>
+    <CartContext.Provider value={{ items, addItem, updateQty, removeItem, clearCart, totalItems, itemNotes, setItemNote }}>
       {children}
     </CartContext.Provider>
   );

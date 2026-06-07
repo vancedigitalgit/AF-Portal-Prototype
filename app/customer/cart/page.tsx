@@ -33,9 +33,8 @@ function getDeliveryOptions(): { date: Date; label: string; dayName: string; pre
 }
 
 export default function CartPage() {
-  const { items, updateQty, removeItem, clearCart, totalItems } = useCart();
+  const { items, updateQty, removeItem, clearCart, totalItems, itemNotes, setItemNote } = useCart();
   const [notes, setNotes] = useState("");
-  const [itemNotes, setItemNotes] = useState<Record<string, string>>({});
   const [expandedNotes, setExpandedNotes] = useState<Set<string>>(new Set());
   const [deliveryDate, setDeliveryDate] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
@@ -164,7 +163,7 @@ export default function CartPage() {
                       autoFocus
                       placeholder={`Note for ${product.name} — e.g. "no red ones", "cut in half", "call if unavailable"…`}
                       value={itemNotes[product.id] ?? ""}
-                      onChange={(e) => setItemNotes((prev) => ({ ...prev, [product.id]: e.target.value }))}
+                      onChange={(e) => setItemNote(product.id, e.target.value)}
                       rows={2}
                       className="w-full text-xs border rounded-lg p-2.5 resize-none focus:outline-none transition-colors"
                       style={{ borderColor: "#d15111", background: "#fdf0ea", color: "#374151" }}

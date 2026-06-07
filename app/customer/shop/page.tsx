@@ -19,10 +19,14 @@ function categoryEmoji(category: string) {
   return map[category] ?? "🌱";
 }
 
-function AddToCart({ product }: { product: Product }) {
-  const { addItem } = useCart();
+function ProductCard({ product }: { product: Product }) {
+  const { addItem, items, itemNotes, setItemNote } = useCart();
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
+  const [noteOpen, setNoteOpen] = useState(false);
+
+  const inCart = items.some((i) => i.product.id === product.id);
+  const hasNote = !!itemNotes[product.id]?.trim();
 
   function handleAdd() {
     addItem(product, qty);
@@ -31,19 +35,54 @@ function AddToCart({ product }: { product: Product }) {
   }
 
   return (
-    <div className="flex items-center gap-2 mt-3">
-      <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden">
-        <button onClick={() => setQty((q) => Math.max(1, q - 1))} className="w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-gray-50 transition-colors">−</button>
-        <span className="w-8 text-center text-sm font-medium text-gray-900">{qty}</span>
-        <button onClick={() => setQty((q) => q + 1)} className="w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-gray-50 transition-colors">+</button>
+    <div>
+      <div className="flex items-center gap-2 mt-3">
+        <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden">
+          <button onClick={() => setQty((q) => Math.max(1, q - 1))} className="w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-gray-50 transition-colors">−</button>
+          <span className="w-8 text-center text-sm font-medium text-gray-900">{qty}</span>
+          <button onClick={() => setQty((q) => q + 1)} className="w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-gray-50 transition-colors">+</button>
+        </div>
+        <button
+          onClick={handleAdd}
+          className="flex-1 text-sm font-semibold py-2 px-3 rounded-lg transition-all text-white"
+          style={{ background: added ? "#059669" : "#1a4231" }}
+        >
+          {added ? "Added ✓" : "Add to order"}
+        </button>
       </div>
-      <button
-        onClick={handleAdd}
-        className="flex-1 text-sm font-semibold py-2 px-3 rounded-lg transition-all text-white"
-        style={{ background: added ? "#059669" : "#1a4231" }}
-      >
-        {added ? "Added ✓" : "Add to order"}
-      </button>
+
+      {/* Note toggle — always available */}
+      <div className="mt-2">
+        <button
+          onClick={() => setNoteOpen((o) => !o)}
+          className="flex items-center gap-1 text-xs font-medium transition-colors"
+          style={{ color: hasNote || noteOpen ? "#d15111" : "#9CA3AF" }}
+        >
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+          </svg>
+          {hasNote ? "Edit note" : noteOpen ? "Cancel" : "Add note"}
+          {!inCart && !hasNote && !noteOpen && <span className="ml-0.5 opacity-60">(saved with order)</span>}
+        </button>
+
+        {noteOpen && (
+          <textarea
+            autoFocus
+            placeholder={`Note for ${product.name} — e.g. "extra ripe", "no red ones"…`}
+            value={itemNotes[product.id] ?? ""}
+            onChange={(e) => setItemNote(product.id, e.target.value)}
+            rows={2}
+            className="w-full mt-1.5 text-xs border rounded-lg p-2 resize-none focus:outline-none transition-colors"
+            style={{ borderColor: "#d15111", background: "#fdf0ea", color: "#374151" }}
+          />
+        )}
+
+        {!noteOpen && hasNote && (
+          <p className="text-xs italic mt-1" style={{ color: "#d15111" }}>
+            "{itemNotes[product.id]}"
+          </p>
+        )}
+      </div>
     </div>
   );
 }
@@ -220,7 +259,7 @@ export default function ShopPage() {
                 <h3 className="text-sm font-semibold text-gray-900 leading-tight">{product.name}</h3>
                 <p className="text-xs text-gray-500 mt-0.5">{product.unit}</p>
               </div>
-              <AddToCart product={product} />
+              <ProductCard product={product} />
             </div>
           ))}
         </div>

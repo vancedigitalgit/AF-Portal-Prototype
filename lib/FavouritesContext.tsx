@@ -8,6 +8,7 @@ export type FavouriteItem = {
   productName: string;
   quantity: number;
   unit: string;
+  note?: string;
 };
 
 export type FavouriteList = {
@@ -25,7 +26,8 @@ type FavouritesContextType = {
   addItemToList: (listId: string, product: Product, quantity: number) => void;
   removeItemFromList: (listId: string, productId: string) => void;
   updateItemQty: (listId: string, productId: string, quantity: number) => void;
-  getListProducts: (listId: string) => (Product & { savedQty: number })[];
+  setFavouriteItemNote: (listId: string, productId: string, note: string) => void;
+  getListProducts: (listId: string) => (Product & { savedQty: number; note?: string })[];
 };
 
 const MessagesContext = createContext<FavouritesContextType | null>(null);
@@ -105,20 +107,30 @@ export function FavouritesProvider({ children }: { children: ReactNode }) {
     );
   }
 
-  function getListProducts(listId: string): (Product & { savedQty: number })[] {
+  function setFavouriteItemNote(listId: string, productId: string, note: string) {
+    setLists((prev) =>
+      prev.map((l) =>
+        l.id === listId
+          ? { ...l, items: l.items.map((i) => i.productId === productId ? { ...i, note } : i) }
+          : l
+      )
+    );
+  }
+
+  function getListProducts(listId: string): (Product & { savedQty: number; note?: string })[] {
     const list = lists.find((l) => l.id === listId);
     if (!list) return [];
     return list.items
       .map((item) => {
         const product = products.find((p) => p.id === item.productId);
         if (!product) return null;
-        return { ...product, savedQty: item.quantity };
+        return { ...product, savedQty: item.quantity, note: item.note };
       })
-      .filter(Boolean) as (Product & { savedQty: number })[];
+      .filter(Boolean) as (Product & { savedQty: number; note?: string })[];
   }
 
   return (
-    <MessagesContext.Provider value={{ lists, createList, deleteList, renameList, addItemToList, removeItemFromList, updateItemQty, getListProducts }}>
+    <MessagesContext.Provider value={{ lists, createList, deleteList, renameList, addItemToList, removeItemFromList, updateItemQty, setFavouriteItemNote, getListProducts }}>
       {children}
     </MessagesContext.Provider>
   );

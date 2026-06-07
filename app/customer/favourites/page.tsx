@@ -108,7 +108,16 @@ function ProductSearch({ listId, onClose }: { listId: string; onClose: () => voi
 }
 
 export default function FavouritesPage() {
-  const { lists, createList, deleteList, renameList, removeItemFromList, updateItemQty } = useFavourites();
+  const { lists, createList, deleteList, renameList, removeItemFromList, updateItemQty, setFavouriteItemNote } = useFavourites();
+  const [expandedNotes, setExpandedNotes] = useState<Set<string>>(new Set());
+
+  function toggleNote(key: string) {
+    setExpandedNotes((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key); else next.add(key);
+      return next;
+    });
+  }
   const [newListName, setNewListName] = useState("");
   const [addingToList, setAddingToList] = useState<string | null>(null);
   const [renamingList, setRenamingList] = useState<string | null>(null);
@@ -218,26 +227,60 @@ export default function FavouritesPage() {
                 {list.items.length === 0 ? (
                   <p className="px-5 py-4 text-sm text-gray-400 italic">No items yet — add products below.</p>
                 ) : (
-                  list.items.map((item) => (
-                    <div key={item.productId} className="flex items-center justify-between px-5 py-3">
-                      <div>
-                        <span className="text-sm text-gray-800">{item.productName}</span>
-                        <span className="text-xs text-gray-400 ml-2">{item.unit}</span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden">
-                          <button onClick={() => updateItemQty(list.id, item.productId, item.quantity - 1)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:bg-gray-50 text-sm">−</button>
-                          <span className="w-7 text-center text-sm font-medium text-gray-900">{item.quantity}</span>
-                          <button onClick={() => updateItemQty(list.id, item.productId, item.quantity + 1)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:bg-gray-50 text-sm">+</button>
+                  list.items.map((item) => {
+                    const noteKey = `${list.id}-${item.productId}`;
+                    const noteOpen = expandedNotes.has(noteKey);
+                    const hasNote = !!item.note?.trim();
+                    return (
+                      <div key={item.productId} className="px-5 py-3 transition-colors" style={{ borderBottom: "1px solid #f9fafb" }}>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <span className="text-sm text-gray-800">{item.productName}</span>
+                            <span className="text-xs text-gray-400 ml-2">{item.unit}</span>
+                            <div className="mt-0.5">
+                              <button
+                                onClick={() => toggleNote(noteKey)}
+                                className="flex items-center gap-1 text-xs font-medium transition-colors"
+                                style={{ color: hasNote || noteOpen ? "#d15111" : "#9CA3AF" }}
+                              >
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                  <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+                                </svg>
+                                {hasNote ? "Edit note" : noteOpen ? "Cancel" : "Add note"}
+                              </button>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-3 shrink-0 ml-4">
+                            <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden">
+                              <button onClick={() => updateItemQty(list.id, item.productId, item.quantity - 1)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:bg-gray-50 text-sm">−</button>
+                              <span className="w-7 text-center text-sm font-medium text-gray-900">{item.quantity}</span>
+                              <button onClick={() => updateItemQty(list.id, item.productId, item.quantity + 1)} className="w-7 h-7 flex items-center justify-center text-gray-500 hover:bg-gray-50 text-sm">+</button>
+                            </div>
+                            <button onClick={() => removeItemFromList(list.id, item.productId)} className="text-gray-300 hover:text-red-400 transition-colors">
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" />
+                              </svg>
+                            </button>
+                          </div>
                         </div>
-                        <button onClick={() => removeItemFromList(list.id, item.productId)} className="text-gray-300 hover:text-red-400 transition-colors">
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" />
-                          </svg>
-                        </button>
+
+                        {noteOpen && (
+                          <textarea
+                            autoFocus
+                            placeholder={`Note for ${item.productName} — e.g. "extra ripe", "no red ones"…`}
+                            value={item.note ?? ""}
+                            onChange={(e) => setFavouriteItemNote(list.id, item.productId, e.target.value)}
+                            rows={2}
+                            className="w-full mt-2 text-xs border rounded-lg p-2 resize-none focus:outline-none"
+                            style={{ borderColor: "#d15111", background: "#fdf0ea", color: "#374151" }}
+                          />
+                        )}
+                        {!noteOpen && hasNote && (
+                          <p className="text-xs italic mt-1" style={{ color: "#d15111" }}>"{item.note}"</p>
+                        )}
                       </div>
-                    </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
 
