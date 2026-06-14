@@ -12,6 +12,8 @@ type ProductContextType = {
   availableCount: number;
   addProduct: (p: Product) => void;
   deleteProduct: (id: string) => void;
+  prices: Record<string, string>;
+  setPrice: (id: string, price: string) => void;
 };
 
 const ProductContext = createContext<ProductContextType>({
@@ -23,6 +25,8 @@ const ProductContext = createContext<ProductContextType>({
   availableCount: 0,
   addProduct: () => {},
   deleteProduct: () => {},
+  prices: {},
+  setPrice: () => {},
 });
 
 export function ProductProvider({ children }: { children: ReactNode }) {
@@ -32,6 +36,12 @@ export function ProductProvider({ children }: { children: ReactNode }) {
   const [available, setAvailable] = useState<Set<string>>(
     () => new Set(staticProducts.filter((p) => p.active).map((p) => p.id))
   );
+
+  const [prices, setPricesMap] = useState<Record<string, string>>({});
+
+  function setPrice(id: string, price: string) {
+    setPricesMap((prev) => ({ ...prev, [id]: price }));
+  }
 
   function toggle(id: string) {
     setAvailable((prev) => {
@@ -74,7 +84,7 @@ export function ProductProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <ProductContext.Provider value={{ allProducts, available, toggle, toggleCategory, isAvailable, availableCount: available.size, addProduct, deleteProduct }}>
+    <ProductContext.Provider value={{ allProducts, available, toggle, toggleCategory, isAvailable, availableCount: available.size, addProduct, deleteProduct, prices, setPrice }}>
       {children}
     </ProductContext.Provider>
   );

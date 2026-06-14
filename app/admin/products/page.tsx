@@ -3,6 +3,53 @@ import { useState, useRef } from "react";
 import { useProducts } from "@/lib/ProductContext";
 import type { Product } from "@/lib/data";
 
+function PriceCell({ productId }: { productId: string }) {
+  const { prices, setPrice } = useProducts();
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState("");
+
+  const current = prices[productId] ?? "";
+
+  function startEdit() {
+    setDraft(current);
+    setEditing(true);
+  }
+
+  function confirm() {
+    setPrice(productId, draft.trim());
+    setEditing(false);
+  }
+
+  if (editing) {
+    return (
+      <div className="flex items-center gap-1">
+        <span className="text-xs text-gray-400">$</span>
+        <input
+          autoFocus
+          type="text"
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onBlur={confirm}
+          onKeyDown={(e) => { if (e.key === "Enter") confirm(); if (e.key === "Escape") setEditing(false); }}
+          className="w-20 px-1.5 py-0.5 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-green-800"
+          placeholder="0.00"
+        />
+      </div>
+    );
+  }
+
+  return (
+    <button
+      onClick={startEdit}
+      className="text-xs transition-colors px-2 py-0.5 rounded hover:bg-gray-100"
+      style={{ color: current ? "#1a4231" : "#9CA3AF" }}
+      title="Click to set price"
+    >
+      {current ? `$${current}` : "Set price"}
+    </button>
+  );
+}
+
 const FRESH_CATEGORIES = ["Vegetables", "Fruit", "Herbs", "Chinese Veg", "Other"];
 const PROCESSED_CATEGORIES = ["Potato Products", "Sweet Potato Products", "Pumpkin Products", "Onion Products", "Carrot Products", "Others"];
 
@@ -24,12 +71,12 @@ function Toggle({ on, onToggle }: { on: boolean; onToggle: () => void }) {
   );
 }
 
-const BLANK = { name: "", unit: "", type: "fresh" as "fresh" | "processed", category: "", newCategory: "" };
+const BLANK = { name: "", unit: "", price: "", type: "fresh" as "fresh" | "processed", category: "", newCategory: "" };
 
 function AddProductDrawer({ open, onClose, onAdd }: {
   open: boolean;
   onClose: () => void;
-  onAdd: (p: Product, imageUrl?: string) => void;
+  onAdd: (p: Product, imageUrl?: string, price?: string) => void;
 }) {
   const [form, setForm] = useState(BLANK);
   const [useNewCategory, setUseNewCategory] = useState(false);
@@ -63,7 +110,8 @@ function AddProductDrawer({ open, onClose, onAdd }: {
     const id = `custom-${Date.now()}`;
     onAdd(
       { id, name: form.name.trim(), unit: form.unit.trim(), type: form.type, category, active: true },
-      imagePreview ?? undefined
+      imagePreview ?? undefined,
+      form.price.trim() || undefined
     );
     setForm(BLANK);
     setUseNewCategory(false);
@@ -137,6 +185,24 @@ function AddProductDrawer({ open, onClose, onAdd }: {
               style={{ borderColor: errors.unit ? "#DC2626" : "#E5E7EB", background: "white" }}
             />
             {errors.unit && <p className="text-xs text-red-500 mt-1">{errors.unit}</p>}
+          </div>
+
+          {/* Price */}
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-1.5">
+              Price <span className="normal-case font-normal text-gray-400">(per unit, optional)</span>
+            </label>
+            <div className="relative">
+              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-gray-400 font-medium">$</span>
+              <input
+                type="text"
+                placeholder="0.00"
+                value={form.price}
+                onChange={(e) => setForm((f) => ({ ...f, price: e.target.value }))}
+                className="w-full pl-7 pr-4 py-2.5 rounded-xl border text-sm focus:outline-none transition-colors"
+                style={{ borderColor: "#E5E7EB", background: "white" }}
+              />
+            </div>
           </div>
 
           {/* Type */}
@@ -257,7 +323,7 @@ export default function ProductsPage() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [addedToast, setAddedToast] = useState("");
   const [confirmDelete, setConfirmDelete] = useState<{ id: string; name: string } | null>(null);
-  const { allProducts, toggle, toggleCategory, isAvailable, availableCount, addProduct, deleteProduct } = useProducts();
+  const { allProducts, toggle, toggleCategory, isAvailable, availableCount, addProduct, deleteProduct, setPrice } = useProducts();
 
   const categories = tab === "fresh" ? FRESH_CATEGORIES : PROCESSED_CATEGORIES;
 
@@ -282,9 +348,10 @@ export default function ProductsPage() {
   const processedCount = allProducts.filter((p) => p.type === "processed" && isAvailable(p.id)).length;
   const processedTotal = allProducts.filter((p) => p.type === "processed").length;
 
-  function handleAdd(p: Product, imageUrl?: string) {
+  function handleAdd(p: Product, imageUrl?: string, price?: string) {
     addProduct(p);
     if (imageUrl) customProductImages[p.id] = imageUrl;
+    if (price) setPrice(p.id, price);
     setAddedToast(p.name);
     setTimeout(() => setAddedToast(""), 3000);
     setTab(p.type);
@@ -449,6 +516,7 @@ export default function ProductsPage() {
                           </div>
                         </div>
                         <div className="flex items-center gap-3 shrink-0 ml-4">
+                          <PriceCell productId={product.id} />
                           <span
                             className="text-xs font-medium px-2 py-0.5 rounded-full"
                             style={on

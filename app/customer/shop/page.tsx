@@ -21,6 +21,8 @@ function categoryEmoji(category: string) {
 
 function ProductCard({ product }: { product: Product }) {
   const { addItem, items, itemNotes, setItemNote } = useCart();
+  const { prices } = useProducts();
+  const price = prices[product.id];
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
   const [noteOpen, setNoteOpen] = useState(false);
@@ -36,6 +38,9 @@ function ProductCard({ product }: { product: Product }) {
 
   return (
     <div>
+      {price && (
+        <p className="text-sm font-semibold mt-1.5" style={{ color: "#1a4231" }}>${price}</p>
+      )}
       <div className="flex items-center gap-2 mt-3">
         <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden">
           <button onClick={() => setQty((q) => Math.max(1, q - 1))} className="w-8 h-8 flex items-center justify-center text-gray-600 hover:bg-gray-50 transition-colors">−</button>

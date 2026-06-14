@@ -2,39 +2,182 @@
 import { useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { getOrderById, getCustomerById } from "@/lib/data";
+import { getCustomerById } from "@/lib/data";
 import type { OrderStatus } from "@/lib/data";
 import { notFound } from "next/navigation";
+import { useAdminOrders } from "@/lib/AdminOrdersContext";
+import type { Order, Customer } from "@/lib/data";
 
 const statusStyles: Record<string, { bg: string; color: string; label: string }> = {
-  pending:    { bg: "#FEF3C7", color: "#D97706", label: "Pending" },
-  confirmed:  { bg: "#DBEAFE", color: "#2563EB", label: "Confirmed" },
-  processing: { bg: "#EDE9FE", color: "#7C3AED", label: "Processing" },
-  fulfilled:  { bg: "#d4e8dc", color: "#059669", label: "Fulfilled" },
-  cancelled:  { bg: "#FEE2E2", color: "#DC2626", label: "Cancelled" },
+  new:       { bg: "#FEF3C7", color: "#D97706", label: "New" },
+  printed:   { bg: "#DBEAFE", color: "#2563EB", label: "Printed" },
+  done:      { bg: "#d4e8dc", color: "#059669", label: "Done" },
+  cancelled: { bg: "#FEE2E2", color: "#DC2626", label: "Cancelled" },
 };
 
-const STATUS_ORDER: OrderStatus[] = ["pending", "confirmed", "processing", "fulfilled", "cancelled"];
+const STATUS_ORDER: OrderStatus[] = ["new", "printed", "done", "cancelled"];
+
+function PickingSlipModal({ order, customer, onClose }: {
+  order: Order;
+  customer: Customer | undefined;
+  onClose: () => void;
+}) {
+  const printDate = new Date().toLocaleDateString("en-AU", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+  const printTime = new Date().toLocaleTimeString("en-AU", { hour: "2-digit", minute: "2-digit" });
+
+  return (
+    <>
+      <div className="fixed inset-0 z-50 bg-black/40 print:hidden" onClick={onClose} />
+      <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+        <div
+          className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Modal toolbar — hidden when printing */}
+          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 print:hidden shrink-0">
+            <div>
+              <h2 className="text-base font-bold text-gray-900">Picking Slip — {order.id}</h2>
+              <p className="text-xs text-gray-400 mt-0.5">Review before printing. Opening this slip marks the order as Printed.</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => {
+                  const content = document.getElementById("picking-slip-content");
+                  if (!content) return;
+                  const win = window.open("", "_blank", "width=800,height=900");
+                  if (!win) return;
+                  win.document.write(`<!DOCTYPE html><html><head><title>Picking Slip — ${order.id}</title><style>
+                    *{box-sizing:border-box;margin:0;padding:0}
+                    body{font-family:'Poppins',Arial,sans-serif;color:#1a1a1a;padding:2rem;font-size:14px;line-height:1.5}
+                    @media print{body{padding:1.5rem}}
+                  </style></head><body>${content.innerHTML}</body></html>`);
+                  win.document.close();
+                  win.focus();
+                  setTimeout(() => { win.print(); win.close(); }, 400);
+                }}
+                className="flex items-center gap-2 text-sm font-bold text-white px-4 py-2 rounded-xl"
+                style={{ background: "#1a4231" }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="6 9 6 2 18 2 18 9" /><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" /><rect x="6" y="14" width="12" height="8" />
+                </svg>
+                Print / Save PDF
+              </button>
+              <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 transition-colors">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                  <path d="M18 6L6 18M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          {/* Picking slip content */}
+          <div className="overflow-y-auto p-8 print:p-0" id="picking-slip-content">
+            {/* Header */}
+            <div className="flex items-start justify-between mb-6 pb-5 border-b-2 border-gray-200">
+              <div>
+                <p className="text-xl font-black tracking-tight" style={{ color: "#1a4231" }}>ADLEES FRESH</p>
+                <p className="text-xs text-gray-500 mt-0.5">Tweed Shire NSW — orders@adleesfresh.com.au</p>
+              </div>
+              <div className="text-right">
+                <p className="text-lg font-black text-gray-900">PICKING SLIP</p>
+                <p className="text-sm font-bold text-gray-700">{order.id}</p>
+                <p className="text-xs text-gray-400 mt-0.5">Printed {printDate} at {printTime}</p>
+              </div>
+            </div>
+
+            {/* Customer info */}
+            <div className="grid grid-cols-2 gap-6 mb-6">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">Deliver To</p>
+                <p className="text-sm font-bold text-gray-900">{customer?.name ?? "Unknown customer"}</p>
+                <p className="text-sm text-gray-600">{customer?.type}</p>
+                {customer?.contact && <p className="text-xs text-gray-500 mt-0.5">{customer.contact}</p>}
+                {customer?.address && <p className="text-xs text-gray-500">{customer.address}</p>}
+              </div>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">Order Details</p>
+                <p className="text-sm text-gray-700"><span className="font-semibold">Date placed:</span> {new Date(order.createdAt).toLocaleDateString("en-AU", { day: "numeric", month: "long", year: "numeric" })}</p>
+                <p className="text-sm text-gray-700"><span className="font-semibold">Time:</span> {new Date(order.createdAt).toLocaleTimeString("en-AU", { hour: "2-digit", minute: "2-digit" })}</p>
+                {order.poNumber && <p className="text-sm text-gray-700 mt-1"><span className="font-semibold">PO Number:</span> {order.poNumber}</p>}
+              </div>
+            </div>
+
+            {/* Items table */}
+            <table className="w-full mb-6" style={{ borderCollapse: "collapse" }}>
+              <thead>
+                <tr style={{ borderBottom: "2px solid #e5e7eb" }}>
+                  <th className="text-left py-2 text-xs font-bold uppercase tracking-widest text-gray-500 w-8">#</th>
+                  <th className="text-left py-2 text-xs font-bold uppercase tracking-widest text-gray-500">Product</th>
+                  <th className="text-right py-2 text-xs font-bold uppercase tracking-widest text-gray-500">Qty</th>
+                  <th className="text-right py-2 text-xs font-bold uppercase tracking-widest text-gray-500">Unit</th>
+                  <th className="text-right py-2 text-xs font-bold uppercase tracking-widest text-gray-500 w-16">✓ Packed</th>
+                </tr>
+              </thead>
+              <tbody>
+                {order.items.map((item, i) => (
+                  <tr key={i} style={{ borderBottom: "1px solid #f3f4f6" }}>
+                    <td className="py-2.5 text-xs text-gray-400">{i + 1}</td>
+                    <td className="py-2.5 text-sm font-medium text-gray-900">{item.productName}</td>
+                    <td className="py-2.5 text-sm font-bold text-gray-900 text-right">{item.quantity}</td>
+                    <td className="py-2.5 text-sm text-gray-500 text-right">{item.unit}</td>
+                    <td className="py-2.5 text-right">
+                      <span className="inline-block w-6 h-6 rounded border-2 border-gray-300 print:border-gray-400" />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            {/* Notes */}
+            {order.notes && (
+              <div className="mb-6 p-3 rounded-lg bg-amber-50 border border-amber-200">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-amber-700 mb-1">Customer Note</p>
+                <p className="text-sm text-amber-900 italic">&ldquo;{order.notes}&rdquo;</p>
+              </div>
+            )}
+
+            {/* Footer */}
+            <div className="pt-4 border-t border-gray-200">
+              <p className="text-[10px] text-gray-400 text-center">Prices not shown — invoice will be emailed to customer separately. This slip is for packing purposes only.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
 
 export default function OrderDetailPage() {
   const params = useParams();
   const id = params.id as string;
-  const order = getOrderById(id);
-  if (!order) notFound();
+  const { getOrder, updateStatus } = useAdminOrders();
+  const orderData = getOrder(id);
+  if (!orderData) notFound();
+  const order = orderData!;
 
   const customer = getCustomerById(order.customerId);
 
-  const [status, setStatus] = useState<OrderStatus>(order.status);
+  const [showSlip, setShowSlip] = useState(false);
   const [saved, setSaved] = useState(false);
 
   function handleStatusChange(st: OrderStatus) {
-    if (st === status) return;
-    setStatus(st);
+    if (st === order.status) return;
+    updateStatus(order.id, st);
     setSaved(true);
     setTimeout(() => setSaved(false), 2500);
   }
 
-  const s = statusStyles[status];
+  function handlePrintSlip() {
+    if (order.status === "new") {
+      updateStatus(order.id, "printed");
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2500);
+    }
+    setShowSlip(true);
+  }
+
+  const s = statusStyles[order.status] ?? statusStyles.new;
 
   return (
     <div className="p-8">
@@ -47,9 +190,12 @@ export default function OrderDetailPage() {
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M20 6L9 17l-5-5" />
           </svg>
-          Status updated to {statusStyles[status].label}
+          Status updated to {statusStyles[order.status]?.label ?? order.status}
         </div>
       )}
+
+      {/* Picking slip modal */}
+      {showSlip && <PickingSlipModal order={order} customer={customer} onClose={() => setShowSlip(false)} />}
 
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm text-gray-500 mb-6">
@@ -68,9 +214,21 @@ export default function OrderDetailPage() {
             {new Date(order.createdAt).toLocaleTimeString("en-AU", { hour: "2-digit", minute: "2-digit" })}
           </p>
         </div>
-        <span className="text-sm font-semibold px-3 py-1.5 rounded-full" style={{ background: s.bg, color: s.color }}>
-          {s.label}
-        </span>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handlePrintSlip}
+            className="flex items-center gap-2 text-sm font-bold px-4 py-2 rounded-xl border-2 transition-all"
+            style={{ borderColor: "#1a4231", color: "#1a4231", background: "white" }}
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="6 9 6 2 18 2 18 9" /><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2" /><rect x="6" y="14" width="12" height="8" />
+            </svg>
+            Print Picking Slip
+          </button>
+          <span className="text-sm font-semibold px-3 py-1.5 rounded-full" style={{ background: s.bg, color: s.color }}>
+            {s.label}
+          </span>
+        </div>
       </div>
 
       <div className="grid grid-cols-3 gap-6">
@@ -113,7 +271,7 @@ export default function OrderDetailPage() {
             <div className="flex gap-2 flex-wrap">
               {STATUS_ORDER.map((st) => {
                 const ss = statusStyles[st];
-                const isCurrent = status === st;
+                const isCurrent = order.status === st;
                 return (
                   <button
                     key={st}
@@ -133,7 +291,9 @@ export default function OrderDetailPage() {
                 );
               })}
             </div>
-            <p className="text-xs text-gray-400 mt-3">Click any status to update. Changes persist for this session.</p>
+            <p className="text-xs text-gray-400 mt-3">
+              Printing a picking slip automatically marks the order as <strong>Printed</strong>. Click <strong>Done</strong> once the order has left.
+            </p>
           </div>
         </div>
 
@@ -167,6 +327,12 @@ export default function OrderDetailPage() {
                     {customer.email}
                   </div>
                 </div>
+                {order.poNumber && (
+                  <div className="pt-2 border-t border-gray-100">
+                    <p className="text-xs text-gray-400 mb-0.5">PO Number</p>
+                    <p className="text-sm font-semibold text-gray-800">{order.poNumber}</p>
+                  </div>
+                )}
                 <div className="pt-2 border-t border-gray-100">
                   <p className="text-xs text-gray-400">Customer since {customer.since}</p>
                 </div>

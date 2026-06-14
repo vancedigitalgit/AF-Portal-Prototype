@@ -21,13 +21,14 @@ export type Customer = {
   since: string;
 };
 
-export type OrderStatus = "pending" | "confirmed" | "processing" | "fulfilled" | "cancelled";
+export type OrderStatus = "new" | "printed" | "done" | "cancelled";
 
 export type OrderItem = {
   productId: string;
   productName: string;
   quantity: number;
   unit: string;
+  note?: string;
 };
 
 export type Order = {
@@ -37,6 +38,7 @@ export type Order = {
   customerType: string;
   status: OrderStatus;
   notes: string;
+  poNumber?: string;
   items: OrderItem[];
   createdAt: string;
 };
@@ -274,8 +276,46 @@ export const customers: Customer[] = [
 
 export const orders: Order[] = [
   {
+    id: "ORD-1045", customerId: "c1", customerName: "The Collective Café", customerType: "Café / Restaurant",
+    status: "new", notes: "Early delivery if possible — kitchen starts at 6am.", createdAt: "2026-06-13T07:05:00",
+    items: [
+      { productId: "f24", productName: "Lettuce - COS",        quantity: 4,  unit: "unit" },
+      { productId: "f50", productName: "Tomato",               quantity: 2,  unit: "10kg case" },
+      { productId: "f88", productName: "Basil",                quantity: 6,  unit: "bunch" },
+      { productId: "pr57", productName: "Cos Leaves Washed",   quantity: 3,  unit: "kg" },
+    ],
+  },
+  {
+    id: "ORD-1044", customerId: "c6", customerName: "Little Seeds Child Care", customerType: "Child Care",
+    status: "printed", notes: "", createdAt: "2026-06-13T06:30:00",
+    items: [
+      { productId: "f61",  productName: "Bananas - Cavs + Lady Fingers", quantity: 2, unit: "case" },
+      { productId: "f77",  productName: "Oranges - Navel",   quantity: 1,  unit: "case" },
+      { productId: "f105", productName: "Baby Spinach",       quantity: 2,  unit: "1.5kg case" },
+    ],
+  },
+  {
+    id: "ORD-1043", customerId: "c3", customerName: "Tweed Valley Primary School", customerType: "School",
+    status: "new", notes: "Canteen restock — please send firm avocados.", poNumber: "PO-6612", createdAt: "2026-06-13T06:15:00",
+    items: [
+      { productId: "f60",  productName: "Avocado",             quantity: 2,  unit: "tray" },
+      { productId: "f16",  productName: "Cucumbers - Lebanese", quantity: 4, unit: "kg" },
+      { productId: "f4",   productName: "Broccoli",            quantity: 1,  unit: "8kg case" },
+      { productId: "f61",  productName: "Bananas - Cavs + Lady Fingers", quantity: 1, unit: "case" },
+    ],
+  },
+  {
+    id: "ORD-1042", customerId: "c8", customerName: "Northern Rivers Meals on Wheels", customerType: "Charity",
+    status: "printed", notes: "", createdAt: "2026-06-13T05:50:00",
+    items: [
+      { productId: "pr69", productName: "Soup Mix - Basic",    quantity: 12, unit: "kg" },
+      { productId: "pr70", productName: "Soup Mix - Soft Diet", quantity: 6, unit: "kg" },
+      { productId: "f42",  productName: "Pumpkin - Butternut", quantity: 5,  unit: "kg" },
+    ],
+  },
+  {
     id: "ORD-1041", customerId: "c1", customerName: "The Collective Café", customerType: "Café / Restaurant",
-    status: "pending", notes: "Please include the stir fry mix in separate bags if possible.", createdAt: "2026-06-04T07:22:00",
+    status: "new", notes: "Please include the stir fry mix in separate bags if possible.", createdAt: "2026-06-12T07:22:00",
     items: [
       { productId: "f4",  productName: "Broccoli",       quantity: 5, unit: "8kg case" },
       { productId: "f52", productName: "Tomato - Roma",  quantity: 2, unit: "10kg case" },
@@ -285,7 +325,7 @@ export const orders: Order[] = [
   },
   {
     id: "ORD-1040", customerId: "c2", customerName: "Burleigh Aged Care", customerType: "Aged Care",
-    status: "confirmed", notes: "", createdAt: "2026-06-04T06:45:00",
+    status: "new", notes: "", poNumber: "PO-7821", createdAt: "2026-06-12T06:45:00",
     items: [
       { productId: "pr69", productName: "Soup Mix - Basic",     quantity: 10, unit: "kg" },
       { productId: "pr70", productName: "Soup Mix - Soft Diet", quantity: 5,  unit: "kg" },
@@ -295,7 +335,7 @@ export const orders: Order[] = [
   },
   {
     id: "ORD-1039", customerId: "c7", customerName: "Feast Catering Co.", customerType: "Food Manufacturer",
-    status: "processing", notes: "Double check the diced onion is freshly cut — last batch was slightly old.", createdAt: "2026-06-04T05:30:00",
+    status: "printed", notes: "Double check the diced onion is freshly cut — last batch was slightly old.", createdAt: "2026-06-12T05:30:00",
     items: [
       { productId: "pr32", productName: "20mm Diced Onions",    quantity: 15, unit: "kg" },
       { productId: "pr53", productName: "Capsicum Red/Green Diced", quantity: 8, unit: "kg" },
@@ -305,7 +345,7 @@ export const orders: Order[] = [
   },
   {
     id: "ORD-1038", customerId: "c5", customerName: "Cabarita Beach Resort", customerType: "Resort / Hotel",
-    status: "fulfilled", notes: "", createdAt: "2026-06-03T07:10:00",
+    status: "done", notes: "", createdAt: "2026-06-10T07:10:00",
     items: [
       { productId: "f61", productName: "Bananas - Cavs + Lady Fingers", quantity: 2, unit: "case" },
       { productId: "f62", productName: "Blueberries",    quantity: 12, unit: "punnet" },
@@ -316,7 +356,7 @@ export const orders: Order[] = [
   },
   {
     id: "ORD-1037", customerId: "c3", customerName: "Tweed Valley Primary School", customerType: "School",
-    status: "fulfilled", notes: "Canteen order for the week.", createdAt: "2026-06-03T06:55:00",
+    status: "done", notes: "Canteen order for the week.", createdAt: "2026-06-09T06:55:00",
     items: [
       { productId: "f4",  productName: "Broccoli",           quantity: 1,  unit: "8kg case" },
       { productId: "f16", productName: "Cucumbers - Lebanese", quantity: 5, unit: "kg" },
@@ -326,7 +366,7 @@ export const orders: Order[] = [
   },
   {
     id: "ORD-1036", customerId: "c4", customerName: "The Anchor Hotel", customerType: "Pub & Club",
-    status: "fulfilled", notes: "", createdAt: "2026-06-02T07:30:00",
+    status: "done", notes: "", createdAt: "2026-06-05T07:30:00",
     items: [
       { productId: "f31", productName: "Onions - Brown",      quantity: 1,  unit: "20kg bag" },
       { productId: "f52", productName: "Tomato - Roma",        quantity: 2,  unit: "10kg case" },
@@ -336,14 +376,14 @@ export const orders: Order[] = [
   },
   {
     id: "ORD-1035", customerId: "c8", customerName: "Northern Rivers Meals on Wheels", customerType: "Charity",
-    status: "cancelled", notes: "Order cancelled — client on leave this week.", createdAt: "2026-06-02T08:00:00",
+    status: "cancelled", notes: "Order cancelled — client on leave this week.", createdAt: "2026-06-03T08:00:00",
     items: [
       { productId: "pr69", productName: "Soup Mix - Basic", quantity: 8, unit: "kg" },
     ],
   },
   {
     id: "ORD-1034", customerId: "c6", customerName: "Little Seeds Child Care", customerType: "Child Care",
-    status: "fulfilled", notes: "", createdAt: "2026-06-01T07:20:00",
+    status: "done", notes: "", createdAt: "2026-05-27T07:20:00",
     items: [
       { productId: "f61",  productName: "Bananas - Cavs + Lady Fingers", quantity: 1, unit: "case" },
       { productId: "f105", productName: "Baby Spinach",   quantity: 2,  unit: "1.5kg case" },

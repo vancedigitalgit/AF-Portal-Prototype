@@ -4,27 +4,47 @@ import { useCart } from "@/lib/CartContext";
 import { productImages } from "@/lib/productImages";
 import Link from "next/link";
 
-// Preferred delivery days for the demo customer (Tue, Thu from account settings)
-const PREFERRED_DAYS = [2, 4]; // 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri
+const PREFERRED_DAYS = [2, 4]; // Tue, Thu
 
-function getDeliveryOptions(): { date: Date; label: string; dayName: string; preferred: boolean }[] {
+// NSW public holidays (YYYY-MM-DD). Add more years as needed.
+const NSW_PUBLIC_HOLIDAYS = new Set([
+  "2026-08-03", // Bank Holiday
+  "2026-10-05", // Labour Day
+  "2026-12-25", // Christmas Day
+  "2026-12-28", // Boxing Day substitute
+  "2027-01-01", // New Year's Day
+  "2027-01-26", // Australia Day
+  "2027-04-02", // Good Friday
+  "2027-04-05", // Easter Monday
+  "2027-04-25", // ANZAC Day
+]);
+
+function toYMD(d: Date) {
+  return d.toISOString().slice(0, 10);
+}
+
+function isNSWHoliday(d: Date) {
+  return NSW_PUBLIC_HOLIDAYS.has(toYMD(d));
+}
+
+function getDeliveryOptions(): { date: Date; label: string; dayName: string; preferred: boolean; holiday: boolean }[] {
   const options = [];
   const today = new Date();
-  today.setHours(14, 0, 0, 0); // 2pm cutoff
+  today.setHours(16, 0, 0, 0); // 4pm cutoff
   const now = new Date();
-  // Start from tomorrow, or day-after if past cutoff
   const start = new Date(now);
   start.setDate(start.getDate() + (now >= today ? 2 : 1));
 
   let d = new Date(start);
   while (options.length < 5) {
     const dow = d.getDay();
-    if (dow !== 0 && dow !== 6) { // skip weekends
+    if (dow !== 0 && dow !== 6) { // weekdays only
       options.push({
         date: new Date(d),
         label: d.toLocaleDateString("en-AU", { day: "numeric", month: "short" }),
         dayName: d.toLocaleDateString("en-AU", { weekday: "short" }),
         preferred: PREFERRED_DAYS.includes(dow),
+        holiday: isNSWHoliday(d),
       });
     }
     d.setDate(d.getDate() + 1);
@@ -35,6 +55,7 @@ function getDeliveryOptions(): { date: Date; label: string; dayName: string; pre
 export default function CartPage() {
   const { items, updateQty, removeItem, clearCart, totalItems, itemNotes, setItemNote } = useCart();
   const [notes, setNotes] = useState("");
+  const [poNumber, setPoNumber] = useState("");
   const [expandedNotes, setExpandedNotes] = useState<Set<string>>(new Set());
   const [deliveryDate, setDeliveryDate] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
@@ -156,7 +177,6 @@ export default function CartPage() {
                   </div>
                 </div>
 
-                {/* Inline note */}
                 {noteOpen && (
                   <div className="px-4 pb-4 pt-0">
                     <textarea
@@ -171,7 +191,6 @@ export default function CartPage() {
                   </div>
                 )}
 
-                {/* Saved note preview (when collapsed but note exists) */}
                 {!noteOpen && hasNote && (
                   <div className="px-4 pb-3 flex items-start gap-1.5">
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#d15111" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 shrink-0">
@@ -211,31 +230,54 @@ export default function CartPage() {
               </div>
             </div>
 
+            {/* PO Number — prominent, optional */}
+            <div className="mb-4 rounded-xl p-3.5 border-2" style={{ borderColor: "#d15111", background: "#fdf8f6" }}>
+              <label className="text-xs font-bold text-gray-700 block mb-1">
+                PO Number
+                <span className="ml-1.5 text-[10px] font-normal text-gray-400 normal-case">Optional — required by some clients</span>
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. PO-8821"
+                value={poNumber}
+                onChange={(e) => setPoNumber(e.target.value)}
+                className="w-full text-sm bg-white border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2"
+                style={{ ["--tw-ring-color" as string]: "#d15111" }}
+              />
+            </div>
+
             {/* Delivery day picker */}
             <div className="mb-4">
               <div className="flex items-center justify-between mb-2">
                 <label className="text-xs font-medium text-gray-600">Delivery date</label>
-                <span className="text-xs text-gray-400">Cut-off 2:00 PM</span>
+                <span className="text-xs text-gray-400">Cut-off 4:00 PM</span>
               </div>
               <div className="grid grid-cols-5 gap-1.5">
                 {deliveryOptions.map((opt) => {
                   const key = opt.label;
                   const active = deliveryDate === key;
+                  const isHoliday = opt.holiday;
                   return (
                     <button
                       key={key}
-                      onClick={() => setDeliveryDate(key)}
+                      onClick={() => !isHoliday && setDeliveryDate(key)}
+                      disabled={isHoliday}
                       className="flex flex-col items-center py-2.5 px-1 rounded-xl border text-center transition-all"
-                      style={active
-                        ? { background: "#1a4231", borderColor: "#1a4231", color: "white" }
-                        : opt.preferred
-                          ? { background: "#edf3f0", borderColor: "#86EFAC", color: "#1a4231" }
-                          : { background: "white", borderColor: "#E5E7EB", color: "#6B7280" }}
+                      style={isHoliday
+                        ? { background: "#FEE2E2", borderColor: "#FECACA", color: "#DC2626", cursor: "not-allowed", opacity: 0.9 }
+                        : active
+                          ? { background: "#1a4231", borderColor: "#1a4231", color: "white" }
+                          : opt.preferred
+                            ? { background: "#edf3f0", borderColor: "#86EFAC", color: "#1a4231" }
+                            : { background: "white", borderColor: "#E5E7EB", color: "#6B7280" }}
                     >
                       <span className="text-[10px] font-semibold uppercase tracking-wide leading-none mb-1">{opt.dayName}</span>
                       <span className="text-xs font-bold leading-none">{opt.date.getDate()}</span>
                       <span className="text-[9px] leading-none mt-0.5 opacity-75">{opt.date.toLocaleDateString("en-AU", { month: "short" })}</span>
-                      {opt.preferred && !active && (
+                      {isHoliday && (
+                        <span className="mt-1 text-[8px] font-bold uppercase leading-none opacity-90">PH</span>
+                      )}
+                      {!isHoliday && opt.preferred && !active && (
                         <span className="mt-1 w-1 h-1 rounded-full" style={{ background: "#1a4231" }} />
                       )}
                     </button>
@@ -247,7 +289,7 @@ export default function CartPage() {
               )}
               {deliveryDate && (
                 <p className="text-xs mt-1.5" style={{ color: "#1a4231" }}>
-                  Delivering {deliveryDate} — order by 2:00 PM the day before.
+                  Delivering {deliveryDate} — order by 4:00 PM the day before.
                 </p>
               )}
             </div>
@@ -272,6 +314,7 @@ export default function CartPage() {
               Place order
             </button>
             <p className="text-xs text-gray-400 text-center mt-2">No payment required — invoice sent separately.</p>
+            <p className="text-[10px] text-gray-300 text-center mt-1">All prices subject to change without notice.</p>
           </div>
         </div>
       </div>

@@ -57,10 +57,10 @@ export function FavouritesProvider({ children }: { children: ReactNode }) {
 
   function createList(name: string): string {
     const id = `fav${Date.now()}`;
-    setLists((prev) => [
-      ...prev,
-      { id, name, items: [], createdAt: new Date().toISOString() },
-    ]);
+    setLists((prev) => {
+      if (prev.length >= 10) return prev;
+      return [...prev, { id, name, items: [], createdAt: new Date().toISOString() }];
+    });
     return id;
   }
 

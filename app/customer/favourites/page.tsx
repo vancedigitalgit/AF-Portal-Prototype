@@ -152,25 +152,34 @@ export default function FavouritesPage() {
 
       {/* Create new list */}
       <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 mb-6">
-        <p className="text-sm font-semibold text-gray-700 mb-3">Create a new list</p>
-        <div className="flex gap-2">
-          <input
-            type="text"
-            placeholder="e.g. Weekly café order, Monday delivery..."
-            value={newListName}
-            onChange={(e) => setNewListName(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleCreate()}
-            className="flex-1 px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-green-900/20"
-          />
-          <button
-            onClick={handleCreate}
-            disabled={!newListName.trim()}
-            className="text-sm font-semibold text-white px-4 py-2 rounded-lg disabled:opacity-40 transition-opacity"
-            style={{ background: "#1a4231" }}
-          >
-            Create
-          </button>
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-sm font-semibold text-gray-700">Create a new list</p>
+          <span className="text-xs text-gray-400">{lists.length} / 10</span>
         </div>
+        {lists.length >= 10 ? (
+          <div className="rounded-lg px-3 py-2.5 text-sm text-amber-700 border border-amber-200" style={{ background: "#FFFBEB" }}>
+            You&apos;ve reached the 10-list limit. Delete an existing list to create a new one.
+          </div>
+        ) : (
+          <div className="flex gap-2">
+            <input
+              type="text"
+              placeholder="e.g. Weekly café order, Monday delivery..."
+              value={newListName}
+              onChange={(e) => setNewListName(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleCreate()}
+              className="flex-1 px-3 py-2 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-green-900/20"
+            />
+            <button
+              onClick={handleCreate}
+              disabled={!newListName.trim()}
+              className="text-sm font-semibold text-white px-4 py-2 rounded-lg disabled:opacity-40 transition-opacity"
+              style={{ background: "#1a4231" }}
+            >
+              Create
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Lists */}
