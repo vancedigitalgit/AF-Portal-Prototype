@@ -3,6 +3,7 @@ import "./globals.css";
 import { ProductProvider } from "@/lib/ProductContext";
 import { MessagesProvider } from "@/lib/MessagesContext";
 import { FavouritesProvider } from "@/lib/FavouritesContext";
+import { SharedOrdersProvider } from "@/lib/SharedOrdersContext";
 
 export const metadata: Metadata = {
   title: "Adlees Fresh — Business Portal",
@@ -17,11 +18,13 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full">
       <body className="min-h-full">
-        <MessagesProvider>
-          <FavouritesProvider>
-            <ProductProvider>{children}</ProductProvider>
-          </FavouritesProvider>
-        </MessagesProvider>
+        <SharedOrdersProvider>
+          <MessagesProvider>
+            <FavouritesProvider>
+              <ProductProvider>{children}</ProductProvider>
+            </FavouritesProvider>
+          </MessagesProvider>
+        </SharedOrdersProvider>
       </body>
     </html>
   );

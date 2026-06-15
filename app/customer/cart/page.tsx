@@ -1,6 +1,7 @@
 "use client";
 import { useState, useMemo } from "react";
 import { useCart } from "@/lib/CartContext";
+import { useCustomerOrders } from "@/lib/CustomerOrdersContext";
 import { productImages } from "@/lib/productImages";
 import Link from "next/link";
 
@@ -54,6 +55,7 @@ function getDeliveryOptions(): { date: Date; label: string; dayName: string; pre
 
 export default function CartPage() {
   const { items, updateQty, removeItem, clearCart, totalItems, itemNotes, setItemNote } = useCart();
+  const { addOrder } = useCustomerOrders();
   const [notes, setNotes] = useState("");
   const [poNumber, setPoNumber] = useState("");
   const [expandedNotes, setExpandedNotes] = useState<Set<string>>(new Set());
@@ -74,6 +76,23 @@ export default function CartPage() {
 
   function handleSubmit() {
     if (!deliveryDate) return;
+    addOrder({
+      id: `ORD-${Date.now().toString().slice(-4)}`,
+      customerId: "c1",
+      customerName: "The Collective Café",
+      customerType: "Café / Restaurant",
+      status: "new",
+      notes,
+      ...(poNumber.trim() ? { poNumber: poNumber.trim() } : {}),
+      createdAt: new Date().toISOString(),
+      items: items.map(({ product, quantity }) => ({
+        productId: product.id,
+        productName: product.name,
+        quantity,
+        unit: product.unit,
+        ...(itemNotes[product.id]?.trim() ? { note: itemNotes[product.id].trim() } : {}),
+      })),
+    });
     setSubmittedDate(deliveryDate);
     setSubmitted(true);
     clearCart();
