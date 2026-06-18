@@ -52,7 +52,7 @@ function ProductCard({ product }: { product: Product }) {
           className="flex-1 text-sm font-semibold py-2 px-3 rounded-lg transition-all text-white"
           style={{ background: added ? "#059669" : "#1a4231" }}
         >
-          {added ? "Added ✓" : "Add to order"}
+          {added ? "Added ✓" : <><span className="sm:hidden">Add</span><span className="hidden sm:inline">Add to order</span></>}
         </button>
       </div>
 
@@ -119,7 +119,7 @@ export default function ShopPage() {
   return (
     <div>
       {/* Hero — full viewport width */}
-      <div className="relative -mx-6 -mt-8 mb-8 overflow-hidden" style={{ height: "480px", marginLeft: "calc(-50vw + 50%)", marginRight: "calc(-50vw + 50%)", width: "100vw" }}>
+      <div className="relative -mx-6 -mt-8 mb-8 overflow-hidden" style={{ height: "clamp(280px, 50vw, 480px)", marginLeft: "calc(-50vw + 50%)", marginRight: "calc(-50vw + 50%)", width: "100vw" }}>
         <img
           src="/images/farm_landscape_hero.webp"
           alt="Adlees Fresh farm"
@@ -131,7 +131,7 @@ export default function ShopPage() {
         {/* Hero content */}
         <div className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center">
           <p className="text-sm font-bold uppercase tracking-widest mb-3" style={{ color: "rgba(255,255,255,0.65)" }}>Wholesale Ordering Portal</p>
-          <h1 className="text-5xl font-bold mb-3" style={{ letterSpacing: "-0.03em", color: "#d15111", textShadow: "0 2px 20px rgba(0,0,0,0.5)" }}>Place Your Order</h1>
+          <h1 className="text-3xl md:text-5xl font-bold mb-3" style={{ letterSpacing: "-0.03em", color: "#d15111", textShadow: "0 2px 20px rgba(0,0,0,0.5)" }}>Place Your Order</h1>
           <p className="text-base mb-8" style={{ color: "rgba(255,255,255,0.85)" }}>
             Browse our range and add items to your order. Cut-off: <strong style={{ color: "white" }}>2:00 PM</strong> for next-day delivery.
           </p>
@@ -198,13 +198,6 @@ export default function ShopPage() {
             ? { background: "#d15111", color: "white", boxShadow: "0 4px 20px rgba(209,81,17,0.35)" }
             : { background: "white", color: "#d15111", border: "2px solid #d15111" }}
         >
-          {/* Carrot */}
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M12 2c0 0-1 3-1 6s1 6 1 6" />
-            <path d="M10 4c-1-1-3-1-4 0" />
-            <path d="M14 4c1-1 3-1 4 0" />
-            <path d="M12 14c-3 0-7 3-8 8h16c-1-5-5-8-8-8z" />
-          </svg>
           Fresh Produce
         </button>
         <button
@@ -214,12 +207,6 @@ export default function ShopPage() {
             ? { background: "#d15111", color: "white", boxShadow: "0 4px 20px rgba(209,81,17,0.35)" }
             : { background: "white", color: "#d15111", border: "2px solid #d15111" }}
         >
-          {/* Chef's knife */}
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M3 21l9-9" />
-            <path d="M12.5 3.5l8 8-9 9L3 12l7-8.5z" />
-            <path d="M15 6l3 3" />
-          </svg>
           Processed Products
         </button>
       </div>

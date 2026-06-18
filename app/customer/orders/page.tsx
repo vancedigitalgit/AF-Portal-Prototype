@@ -7,13 +7,6 @@ import { useCart } from "@/lib/CartContext";
 import { useProducts } from "@/lib/ProductContext";
 import { useCustomerOrders } from "@/lib/CustomerOrdersContext";
 
-const statusStyles: Record<string, { bg: string; color: string; label: string }> = {
-  new:       { bg: "#FEF3C7", color: "#D97706", label: "Received" },
-  printed:   { bg: "#EDE9FE", color: "#7C3AED", label: "Being prepared" },
-  done:      { bg: "#d4e8dc", color: "#059669", label: "Delivered" },
-  cancelled: { bg: "#FEE2E2", color: "#DC2626", label: "Cancelled" },
-};
-
 const TWO_WEEKS_AGO = new Date();
 TWO_WEEKS_AGO.setDate(TWO_WEEKS_AGO.getDate() - 14);
 
@@ -161,7 +154,6 @@ export default function CustomerOrdersPage() {
 
       <div className="space-y-3">
         {displayOrders.map((order) => {
-          const s = statusStyles[order.status];
           const isOwn = order.customerId === "c1";
           const canEdit = isOwn && order.status === "new" && !cutoffPassed;
           const canCancel = isOwn && order.status === "new" && !orderCutoffPassed;
@@ -175,9 +167,6 @@ export default function CustomerOrdersPage() {
                 <div>
                   <div className="flex items-center gap-2 flex-wrap">
                     <p className="text-sm font-semibold text-gray-900">{order.id}</p>
-                    <span className="text-xs font-medium px-2 py-0.5 rounded-full" style={{ background: s.bg, color: s.color }}>
-                      {s.label}
-                    </span>
                   </div>
                   <p className="text-xs text-gray-400 mt-0.5">
                     {new Date(order.createdAt).toLocaleDateString("en-AU", { day: "numeric", month: "long", year: "numeric" })}

@@ -27,7 +27,7 @@ export default function DashboardPage() {
   const todayLabel = new Date().toLocaleDateString("en-AU", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
 
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-8">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-2xl font-semibold text-gray-900">Good morning, Adam</h1>
@@ -35,7 +35,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Stat cards */}
-      <div className="grid grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
           <p className="text-sm text-gray-500 font-medium">Today&apos;s Orders</p>
           <p className="text-3xl font-semibold text-gray-900 mt-1">{totalToday}</p>
@@ -65,9 +65,9 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Today's orders table */}
-        <div className="col-span-2 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
           <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
             <h2 className="font-semibold text-gray-900">Today&apos;s Orders</h2>
             <Link href="/admin/orders" className="text-sm font-medium" style={{ color: "#1a4231" }}>View all</Link>
@@ -75,6 +75,7 @@ export default function DashboardPage() {
           {todayOrders.length === 0 ? (
             <p className="px-6 py-8 text-sm text-gray-400 text-center">No orders received yet today.</p>
           ) : (
+            <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="bg-gray-50 text-xs font-medium text-gray-500 uppercase tracking-wide">
@@ -109,6 +110,7 @@ export default function DashboardPage() {
                 })}
               </tbody>
             </table>
+            </div>
           )}
         </div>
 

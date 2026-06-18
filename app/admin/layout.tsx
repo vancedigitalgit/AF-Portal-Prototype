@@ -7,7 +7,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     <AdminAuthGate>
       <div className="flex min-h-screen bg-gray-50">
         <AdminSidebar />
-        <main className="flex-1 min-w-0" style={{ marginLeft: "260px" }}>
+        <main className="flex-1 min-w-0 lg:ml-[260px]">
           {children}
         </main>
         <FeedbackButton />

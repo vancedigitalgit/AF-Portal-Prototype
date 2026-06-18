@@ -142,16 +142,16 @@ export default function CartPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between gap-3 mb-6">
         <h1 className="text-2xl font-semibold text-gray-900">Your Order</h1>
         <Link href="/customer/shop" className="text-sm font-medium" style={{ color: "#1a4231" }}>
           + Add more items
         </Link>
       </div>
 
-      <div className="grid grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Items list */}
-        <div className="col-span-2 space-y-3">
+        <div className="lg:col-span-2 space-y-3">
           {items.map(({ product, quantity }) => {
             const noteOpen = expandedNotes.has(product.id);
             const hasNote = !!itemNotes[product.id]?.trim();

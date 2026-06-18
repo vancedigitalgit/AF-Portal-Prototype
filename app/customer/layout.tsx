@@ -7,7 +7,7 @@ export default function CustomerLayout({ children }: { children: React.ReactNode
     <CartProvider>
       <div className="min-h-screen" style={{ background: "#fdfdf9" }}>
         <CustomerNav />
-        <main className="max-w-6xl mx-auto px-6 py-8">{children}</main>
+        <main className="max-w-6xl mx-auto px-4 md:px-6 py-8">{children}</main>
         <FeedbackButton />
       </div>
     </CartProvider>

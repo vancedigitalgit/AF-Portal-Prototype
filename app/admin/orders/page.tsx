@@ -33,7 +33,7 @@ export default function OrdersPage() {
   ];
 
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-8">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-semibold text-gray-900">Orders</h1>
@@ -59,7 +59,8 @@ export default function OrdersPage() {
 
       {/* Orders table */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <table className="w-full">
+        <div className="overflow-x-auto">
+        <table className="w-full min-w-[640px]">
           <thead>
             <tr className="bg-gray-50 text-xs font-medium text-gray-500 uppercase tracking-wide">
               <th className="px-6 py-3 text-left">Order ID</th>
@@ -112,6 +113,7 @@ export default function OrdersPage() {
             })}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   );
