@@ -29,6 +29,7 @@ export type OrderItem = {
   quantity: number;
   unit: string;
   note?: string;
+  isCustom?: boolean;
 };
 
 export type Order = {

@@ -7,6 +7,13 @@ export type CartItem = {
   quantity: number;
 };
 
+export type CustomCartItem = {
+  id: string;
+  name: string;
+  description: string;
+  unit: string;
+};
+
 type CartContextType = {
   items: CartItem[];
   addItem: (product: Product, quantity: number) => void;
@@ -16,6 +23,9 @@ type CartContextType = {
   totalItems: number;
   itemNotes: Record<string, string>;
   setItemNote: (productId: string, note: string) => void;
+  customItems: CustomCartItem[];
+  addCustomItem: (name: string, description: string, unit: string) => void;
+  removeCustomItem: (id: string) => void;
 };
 
 const CartContext = createContext<CartContextType | null>(null);
@@ -23,6 +33,7 @@ const CartContext = createContext<CartContextType | null>(null);
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [itemNotes, setItemNotes] = useState<Record<string, string>>({});
+  const [customItems, setCustomItems] = useState<CustomCartItem[]>([]);
 
   const addItem = useCallback((product: Product, quantity: number) => {
     setItems((prev) => {
@@ -46,16 +57,32 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setItems((prev) => prev.filter((i) => i.product.id !== productId));
   }, []);
 
-  const clearCart = useCallback(() => { setItems([]); setItemNotes({}); }, []);
+  const clearCart = useCallback(() => {
+    setItems([]);
+    setItemNotes({});
+    setCustomItems([]);
+  }, []);
 
   const setItemNote = useCallback((productId: string, note: string) => {
     setItemNotes((prev) => ({ ...prev, [productId]: note }));
   }, []);
 
-  const totalItems = items.reduce((sum, i) => sum + i.quantity, 0);
+  const addCustomItem = useCallback((name: string, description: string, unit: string) => {
+    setCustomItems((prev) => [...prev, { id: `ci-${Date.now()}`, name, description, unit }]);
+  }, []);
+
+  const removeCustomItem = useCallback((id: string) => {
+    setCustomItems((prev) => prev.filter((ci) => ci.id !== id));
+  }, []);
+
+  const totalItems = items.reduce((sum, i) => sum + i.quantity, 0) + customItems.length;
 
   return (
-    <CartContext.Provider value={{ items, addItem, updateQty, removeItem, clearCart, totalItems, itemNotes, setItemNote }}>
+    <CartContext.Provider value={{
+      items, addItem, updateQty, removeItem, clearCart, totalItems,
+      itemNotes, setItemNote,
+      customItems, addCustomItem, removeCustomItem,
+    }}>
       {children}
     </CartContext.Provider>
   );

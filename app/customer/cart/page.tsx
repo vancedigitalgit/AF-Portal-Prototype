@@ -54,7 +54,7 @@ function getDeliveryOptions(): { date: Date; label: string; dayName: string; pre
 }
 
 export default function CartPage() {
-  const { items, updateQty, removeItem, clearCart, totalItems, itemNotes, setItemNote } = useCart();
+  const { items, updateQty, removeItem, clearCart, totalItems, itemNotes, setItemNote, customItems, removeCustomItem } = useCart();
   const { addOrder } = useCustomerOrders();
   const [notes, setNotes] = useState("");
   const [poNumber, setPoNumber] = useState("");
@@ -85,13 +85,23 @@ export default function CartPage() {
       notes,
       ...(poNumber.trim() ? { poNumber: poNumber.trim() } : {}),
       createdAt: new Date().toISOString(),
-      items: items.map(({ product, quantity }) => ({
-        productId: product.id,
-        productName: product.name,
-        quantity,
-        unit: product.unit,
-        ...(itemNotes[product.id]?.trim() ? { note: itemNotes[product.id].trim() } : {}),
-      })),
+      items: [
+        ...items.map(({ product, quantity }) => ({
+          productId: product.id,
+          productName: product.name,
+          quantity,
+          unit: product.unit,
+          ...(itemNotes[product.id]?.trim() ? { note: itemNotes[product.id].trim() } : {}),
+        })),
+        ...customItems.map((ci) => ({
+          productId: `custom-${ci.id}`,
+          productName: ci.name,
+          quantity: 1,
+          unit: ci.unit,
+          ...(ci.description ? { note: ci.description } : {}),
+          isCustom: true,
+        })),
+      ],
     });
     setSubmittedDate(deliveryDate);
     setSubmitted(true);
@@ -123,7 +133,7 @@ export default function CartPage() {
     );
   }
 
-  if (items.length === 0) {
+  if (items.length === 0 && customItems.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
         <div className="w-16 h-16 rounded-full flex items-center justify-center mb-5 bg-gray-100">
@@ -221,6 +231,33 @@ export default function CartPage() {
               </div>
             );
           })}
+
+          {/* Custom (not listed) items */}
+          {customItems.map((ci) => (
+            <div key={ci.id} className="bg-white rounded-xl border-2 border-dashed overflow-hidden" style={{ borderColor: "#d15111" }}>
+              <div className="p-4 flex items-center gap-4">
+                <div className="w-12 h-12 rounded-lg shrink-0 flex items-center justify-center" style={{ background: "rgba(209,81,17,0.1)" }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d15111" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10" /><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01" />
+                  </svg>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] font-bold uppercase tracking-wider mb-0.5" style={{ color: "#d15111" }}>Custom request</p>
+                  <p className="text-sm font-semibold text-gray-900">{ci.name}</p>
+                  <p className="text-xs text-gray-500 mt-0.5">per {ci.unit}</p>
+                  {ci.description && <p className="text-xs text-gray-400 mt-0.5 italic">&ldquo;{ci.description}&rdquo;</p>}
+                </div>
+                <button
+                  onClick={() => removeCustomItem(ci.id)}
+                  className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-300 hover:text-red-400 hover:bg-red-50 transition-colors"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14H6L5 6" /><path d="M10 11v6M14 11v6" /><path d="M9 6V4h6v2" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
 
         {/* Summary */}
@@ -242,6 +279,20 @@ export default function CartPage() {
                 </div>
               ))}
             </div>
+            {customItems.map((ci) => (
+              <div key={ci.id}>
+                <div className="flex justify-between text-sm">
+                  <span className="flex items-center gap-1.5 truncate mr-2">
+                    <span className="text-[10px] font-bold shrink-0" style={{ color: "#d15111" }}>Custom</span>
+                    <span className="text-gray-600 truncate">{ci.name}</span>
+                  </span>
+                  <span className="text-gray-900 font-medium shrink-0">1 {ci.unit}</span>
+                </div>
+                {ci.description && (
+                  <p className="text-[10px] italic mt-0.5 truncate" style={{ color: "#d15111" }}>↳ {ci.description}</p>
+                )}
+              </div>
+            ))}
             <div className="border-t border-gray-100 pt-3 mb-4">
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">Total items</span>

@@ -116,9 +116,19 @@ function PickingSlipModal({ order, customer, onClose }: {
               </thead>
               <tbody>
                 {order.items.map((item, i) => (
-                  <tr key={i} style={{ borderBottom: "1px solid #f3f4f6" }}>
+                  <tr key={i} style={{ borderBottom: "1px solid #f3f4f6", ...(item.isCustom ? { background: "#f0fdf4" } : {}) }}>
                     <td className="py-2.5 text-xs text-gray-400">{i + 1}</td>
-                    <td className="py-2.5 text-sm font-medium text-gray-900">{item.productName}</td>
+                    <td className="py-2.5">
+                      {item.isCustom ? (
+                        <div>
+                          <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: "#059669" }}>Item not listed</span>
+                          <p className="text-sm font-medium text-gray-900">{item.productName}</p>
+                          {item.note && <p className="text-xs text-gray-500 italic mt-0.5">{item.note}</p>}
+                        </div>
+                      ) : (
+                        <span className="text-sm font-medium text-gray-900">{item.productName}</span>
+                      )}
+                    </td>
                     <td className="py-2.5 text-sm font-bold text-gray-900 text-right">{item.quantity}</td>
                     <td className="py-2.5 text-sm text-gray-500 text-right">{item.unit}</td>
                     <td className="py-2.5 text-right">
@@ -248,8 +258,22 @@ export default function OrderDetailPage() {
               </thead>
               <tbody>
                 {order.items.map((item, i) => (
-                  <tr key={i} className="border-t border-gray-50">
-                    <td className="px-6 py-3.5 text-sm font-medium text-gray-800">{item.productName}</td>
+                  <tr
+                    key={i}
+                    className="border-t border-gray-50"
+                    style={item.isCustom ? { background: "#f0fdf4" } : undefined}
+                  >
+                    <td className="px-6 py-3.5">
+                      {item.isCustom ? (
+                        <div>
+                          <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: "#059669" }}>Item not listed</span>
+                          <p className="text-sm font-medium text-gray-800 mt-0.5">{item.productName}</p>
+                          {item.note && <p className="text-xs text-gray-500 italic mt-0.5">{item.note}</p>}
+                        </div>
+                      ) : (
+                        <span className="text-sm font-medium text-gray-800">{item.productName}</span>
+                      )}
+                    </td>
                     <td className="px-6 py-3.5 text-sm text-gray-700 text-right font-semibold">{item.quantity}</td>
                     <td className="px-6 py-3.5 text-sm text-gray-500 text-right">{item.unit}</td>
                   </tr>
